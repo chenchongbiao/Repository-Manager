@@ -1,0 +1,36 @@
+#!/bin/env python3
+
+from yaml import SafeDumper, SafeLoader, dump, load
+
+
+class MyDumper(SafeDumper):
+    def write_line_break(self, data=None):
+        super().write_line_break(data)
+
+        if len(self.indents) == 2:  # 如果当前的缩进层数为2,输出一个换行符。
+            super().write_line_break()
+
+    def increase_indent(self, flow=False, indentless=False):
+        return super().increase_indent(
+            flow, False
+        )  # 禁用 increase_indent() 的 indentless 参数，确保每个键值对都会有缩进。
+
+
+def add_repo(data: dict):
+    with open("repos.yml") as repof:
+        yml = load(repof, Loader=SafeLoader)
+
+    ymlrepo = yml["repos"]
+    ymlrepo.append(data)
+    ymlrepo.sort(key=lambda e: e["repo"])  # 按照字典中 "repo" 键的值对列表进行排序
+    yml["repos"] = ymlrepo
+
+    with open("repos.yml.new", "w") as repof:
+        dump(yml, repof, allow_unicode=True, sort_keys=False, Dumper=MyDumper)
+
+
+repo = ""
+info = ""
+
+data = {"repo": repo, "group": "deepin-sysdev-team", "info": info}
+add_repo(data)
